@@ -6,6 +6,7 @@
 package com.punchables.rainbowdad.utils;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Vector2;
 import java.awt.Point;
 
 /**
@@ -26,6 +27,11 @@ public class Coord {
         this.y = y;
     }
 
+    public Coord(Vector2 v){
+        this.x = (int) v.x;
+        this.y = (int) v.y;
+    }
+    
     public Coord(Point p){
         this.x = p.x;
         this.y = p.y;
@@ -151,8 +157,8 @@ public class Coord {
     }
 
     
-    public static double getDistanceSquared(Coord c1, Coord c2){
-        return Math.pow(c1.x - c2.x, 2) + Math.pow(c1.y - c2.y, 2);
+    public static int getDistanceSquared(Coord c1, Coord c2){
+        return (int) (Math.pow(c1.x - c2.x, 2) + Math.pow(c1.y - c2.y, 2));
     }
     
 }

@@ -57,8 +57,6 @@ public class DungeonGen{
     //max difference between height and length
     private int roomOblongness = 10;
             
-    //%
-    private int doorPercentage = 0;
     //must be at least 2 less than than minRoomSize
     private int doorSize = 4;
     private int wallOffset = 1;
@@ -75,6 +73,7 @@ public class DungeonGen{
         this.dungeonWidth = w;
 
         setMapToTile(TileType.DIRT);
+        clearOldDungeon();
         
         if((h*w) < maxRooms * ((minRoomSize + maxRoomSize) / 2) + 100){
             Gdx.app.log("WARNING", "Beware of infinite dungeon generation.");
@@ -94,10 +93,7 @@ public class DungeonGen{
         
         //dungeonMap = new ConcurrentHashMap<>();
         setMapToTile(TileType.DIRT);
-        
-        System.out.println("");
-        
-        
+        clearOldDungeon();
         
         totalDungeons++;
         Gdx.app.log("DungeonGen", "Starting generation of dungeon " + totalDungeons + ".");
@@ -106,7 +102,7 @@ public class DungeonGen{
         openWalls = new ArrayList<Coord>();
         wallSeeds = new ArrayList<>();
         if(randomSeed){
-            seed = (long) rand.randomf(0, 100000);
+            seed = System.currentTimeMillis() * (long) rand.randomf(0, 1000);
         }
         
         //*******
@@ -298,6 +294,14 @@ public class DungeonGen{
         
         
     }
+    
+    public void clearOldDungeon(){
+        dungeonMap.clear();
+        wallsList.clear();
+        wallSeeds.clear();
+        openWalls.clear();
+        roomList.clear();
+    }
 
     public boolean isRoomValid(Room nextRoom){
         if(isRoomOutsideDungeon(nextRoom)){
@@ -378,9 +382,6 @@ public class DungeonGen{
         
         Coord newDoorPos = new Coord();
         Coord[] newDoors = new Coord[doorSize * 2];
-
-        //if new doors should be to the left or right of the orig. door
-        boolean left = rand.randomBool();
         
 //        switch(doorDir){
 //            case NORTH:
@@ -418,28 +419,6 @@ public class DungeonGen{
         
         Coord[] newDoors = new Coord[doorSize * 2];
         Coord curCoord = new Coord(doorPos);
-
-//        for(int i = 0; curCoord.getY() < doorPos.getFromDir(doorDir, 2).getY();
-//                curCoord.setY(curCoord.getFromDir(doorDir.getClockwise(), 1).getY())){
-//            for(; curCoord.getX() < doorPos.getFromDir(doorDir, doorSize).getX();
-//                    curCoord.setX(curCoord.getFromDir(doorDir.getClockwise(), 1).getX())){
-//                newDoors[i] = new Coord(curCoord);
-//                i++;
-//
-//            }
-//        }
-        
-        //FOR NORTH ONLY, REFACTOR TO WORK FOR ALL DIR
-//        int count = 0;
-//        for(int y = curCoord.getY(); y < curCoord.getY() + 2; y++){
-//            for(int x = curCoord.getX(); x < curCoord.getX() + doorSize; x++){
-//                newDoors[count] = new Coord(x,y);
-//                System.out.println("Coord! " +  new Coord(x,y));
-//                System.out.println("Count : " + count);
-//                count += 1;
-//            }
-//            
-//        }
         
         int yLimit, xLimit;
         int yIncr = 1, xIncr = 1;
@@ -456,11 +435,15 @@ public class DungeonGen{
                 break;
             case WEST:
                 curCoord = curCoord.getWest(1);
+                //curCoord = curCoord.getNorth(1);
+                //shifted north 1 to account for 3/4 persp.
                 yLimit = curCoord.getY() + doorSize;
                 xLimit = curCoord.getX() + 2;
                 break;
             case EAST:
                 //curCoord = curCoord.getEast(1);
+                //curCoord = curCoord.getNorth(1);
+                //shifted north 1 to account for 3/4 persp.
                 yLimit = curCoord.getY() + doorSize;
                 xLimit = curCoord.getX() + 2;
                 break;

@@ -12,8 +12,6 @@ import com.punchables.rainbowdad.screens.GameScreen;
 import com.punchables.rainbowdad.utils.Collider;
 import com.punchables.rainbowdad.utils.Coord;
 import static java.lang.Math.abs;
-import static java.lang.Math.sqrt;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
