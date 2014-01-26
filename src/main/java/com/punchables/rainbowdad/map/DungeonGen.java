@@ -14,7 +14,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.punchables.rainbowdad.utils.Coord;
 import com.punchables.rainbowdad.utils.Direction;
 import com.punchables.rainbowdad.utils.SeededRandom;
+import static java.lang.Math.abs;
 import java.util.ArrayList;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
@@ -27,31 +29,38 @@ public class DungeonGen{
     private ConcurrentHashMap<Coord, MapTile> dungeonMap = new ConcurrentHashMap<>();
     private ArrayList<Coord> openWalls = new ArrayList<>();
     private ArrayList<Coord> wallSeeds = new ArrayList<>();
+    private ArrayList<Coord> wallsList = new ArrayList<>();
     private ArrayList<Room> roomList = new ArrayList<>();
     private int dungeonHeight, dungeonWidth;
-    Texture tile_debug2 = new Texture(Gdx.files.internal("16/debug16.png"));
+    Texture tile_debugtall = new Texture(Gdx.files.internal("64/debug64-tall.png"));
     Texture tile_debug = new Texture(Gdx.files.internal("16/debug2-16.png"));
     Texture tile_floor = new Texture(Gdx.files.internal("64/floor64.png"));
     Texture tile_dirt = new Texture(Gdx.files.internal("64/dirt64.png"));
     Texture tile_empty = new Texture(Gdx.files.internal("64/empty64.png"));
-    Texture tile_wall = new Texture(Gdx.files.internal("64/wall-border64.png"));
+    Texture tile_walltall = new Texture(Gdx.files.internal("64/wall-tall.png"));
+    Texture tile_wall = new Texture(Gdx.files.internal("64/wall64.png"));
+    Texture tile_solidwall = new Texture(Gdx.files.internal("64/wall-tall2.png"));
     Texture tile_door = new Texture(Gdx.files.internal("16/door16.png"));
+    Texture tile_ceiling = new Texture(Gdx.files.internal("64/ceiling64.png"));
     
     private int totalDungeons = 0;
     //number of tries to generate a dungeon
     private int newDungeons = 0;
     private int maxDungeonTries = 3;
     
-    private int maxRooms = 1;
-    private int minRoomSize = 1;
-    private int maxRoomSize = 1;
-    private int meanRoomSize = 1;
-    private int stdRoomDev = 0;
+    private int maxRooms = 20;
+    private int minRoomSize = 10;
+    private int maxRoomSize = 20;
+    private int meanRoomSize = 15;
+    private int stdRoomDev = 5;
+    
+    //max difference between height and length
+    private int roomOblongness = 10;
             
     //%
     private int doorPercentage = 0;
     //must be at least 2 less than than minRoomSize
-    private int doorSize = 0;
+    private int doorSize = 4;
     private int wallOffset = 1;
     
     //times to try to generate a new room
@@ -65,6 +74,8 @@ public class DungeonGen{
         this.dungeonHeight = h;
         this.dungeonWidth = w;
 
+        setMapToTile(TileType.DIRT);
+        
         if((h*w) < maxRooms * ((minRoomSize + maxRoomSize) / 2) + 100){
             Gdx.app.log("WARNING", "Beware of infinite dungeon generation.");
         }
@@ -80,6 +91,9 @@ public class DungeonGen{
         //      b) choose new seed (if randomSeed = true)
         //      c) set dungeon start time
         //*******
+        
+        //dungeonMap = new ConcurrentHashMap<>();
+        setMapToTile(TileType.DIRT);
         
         System.out.println("");
         
@@ -159,11 +173,9 @@ public class DungeonGen{
                         wallSeed.getFromDir(wallDir.getClockwise(), doorSize + 1)) != null
                         && dungeonMap.get(
                                 wallSeed.getFromDir(wallDir.getCounterClockwise(), doorSize + 1)) != null){
-                    if(!dungeonMap.get(
-                            wallSeed.getFromDir(wallDir.getClockwise(), doorSize + 1)).is(TileType.WALL)
-                            || !dungeonMap.get(
-                                    wallSeed.getFromDir(wallDir.getCounterClockwise(), doorSize + 1)).is(TileType.WALL)){
-                        setTile(wallSeed, TileType.WALL);
+                    if(!wallsList.contains(wallSeed.getFromDir(wallDir.getClockwise(), doorSize + 1))
+                            || !wallsList.contains(wallSeed.getFromDir(wallDir.getCounterClockwise(), doorSize + 1))){
+                        //setTile(wallSeed, TileType.WALL);
                         openWalls.remove(wallSeed);
                         tries++;
                         continue;
@@ -213,8 +225,7 @@ public class DungeonGen{
                 //if room is outside the dungeon or a room exists, choose a new wall tile               
                 if(!isRoomValid(nextRoom)){
                     tries++;
-                    //HERE"S THE BUG!!! aajdjasdasdasdasdasfasdfgsdfhdj
-                    setTile(wallSeed, TileType.WALL);
+                    //setTile(wallSeed, TileType.WALL);
                     Gdx.app.log("DungeonGen", "Room discarded.");
                     openWalls.remove(wallSeed);
                 } else {
@@ -266,23 +277,18 @@ public class DungeonGen{
         
         
         }
-//        SpriteBatch sprBatch = new SpriteBatch();
-//        BitmapFont font = new BitmapFont();
-//        //labelling doors
-//        sprBatch.begin();
-//        for(Room room : roomList){
-//            font.setColor(Color.RED);
-//            font.draw(sprBatch, "asda" + roomList.indexOf(room), 
-//                    room.getCenter().getX(), room.getCenter().getY());
-//            
-//        }
-//        sprBatch.end();
         
         //go through all of the wall seeds
         for(Coord c : wallSeeds){
             //setTile(c, TileType.FLOOR);
             clearDoors(c, getWallDir(c));
         }
+        for(Coord c : wallsList){
+            if(dungeonMap.get(c.getSouth(1)).is(TileType.FLOOR)){
+                setTile(c.getSouth(1), TileType.WALL);
+            }
+        }
+        
         
         newDungeons = 0;
         
@@ -314,20 +320,34 @@ public class DungeonGen{
         int roomHeight = newRoom.getHeight();
         
         
-        for(int y = roomYPos; y < roomYPos + roomHeight; y += 1){
-            for(int x = roomXPos; x < roomXPos + roomWidth; x += 1){
+        for(int y = roomYPos; y < roomYPos + roomHeight; y++){
+            for(int x = roomXPos; x < roomXPos + roomWidth; x++){
                 setTile(x, y, TileType.FLOOR);
                 //System.out.println("x = " + x + ", y = " + y);
             }
         }
         
-        ArrayList<Coord> currentRoomWalls = newRoom.genWalls()[0];
-        ArrayList<Coord> currentRoomNonDiagWalls = newRoom.genWalls()[1];
+        ArrayList[] roomWalls = newRoom.genWalls();
         
+        ArrayList<Coord> currentRoomWalls = roomWalls[0];
+        ArrayList<Coord> currentRoomNonDiagWalls = roomWalls[1];
+        
+        wallsList.addAll(currentRoomWalls);
         openWalls.addAll(currentRoomNonDiagWalls);
         
-        for(Coord c : currentRoomWalls){
-            setTile(c.getX(), c.getY(), TileType.WALL);
+//        for(Coord c : currentRoomWalls){
+//            if(c.getY() == roomYPos + roomHeight){
+//                setTile(c, TileType.NONE);
+//                System.out.println(c.getY() + "==" + (roomYPos + roomHeight));
+//            } else {
+//                //System.out.println(c.getY() + "==" + (roomYPos + roomHeight));
+//                setTile(c, TileType.WALL);
+//            }
+//        }
+//        
+        for(int i = 0; i < currentRoomWalls.size(); i++){
+            Coord currentCoord = currentRoomWalls.get(i);
+            setTile(currentCoord, TileType.CEILING);
         }
         
         return false;
@@ -354,7 +374,7 @@ public class DungeonGen{
      */
     public boolean clearDoors(Coord doorPos, Direction doorDir){
 
-        System.out.println("RECEIVED doorPos: " + doorPos);
+        //System.out.println("RECEIVED doorPos: " + doorPos);
         
         Coord newDoorPos = new Coord();
         Coord[] newDoors = new Coord[doorSize * 2];
@@ -387,6 +407,7 @@ public class DungeonGen{
         setTile(doorPos, TileType.FLOOR);
         
         for(Coord c : getArrayOfDoors(doorPos, doorDir)){
+            wallsList.remove(c);
             setTile(c, TileType.FLOOR);
         }
         
@@ -455,8 +476,8 @@ public class DungeonGen{
         for(int y = curCoord.getY(); y < yLimit; y += yIncr){
             for(int x = curCoord.getX(); x < xLimit; x+= xIncr){
                 newDoors[count] = new Coord(x,y);
-                System.out.println("Coord! " +  new Coord(x,y));
-                System.out.println("Count : " + count);
+//                System.out.println("Coord! " +  new Coord(x,y));
+//                System.out.println("Count : " + count);
                 count++;
             }
             
@@ -507,7 +528,7 @@ public class DungeonGen{
         for(Coord c : room.getListOfTileCoords()){
             //if a floor exists
             if(dungeonMap.get(c).is(TileType.FLOOR) || 
-                    dungeonMap.get(c).is(TileType.WALL)){
+                    dungeonMap.get(c).is(TileType.CEILING)){
                 return true;
             }
         }
@@ -517,6 +538,15 @@ public class DungeonGen{
     
     public ConcurrentHashMap getMap(){
         return dungeonMap;
+    }
+    
+    public void setMapToTile(TileType tileType){
+        for(Entry<Coord, MapTile> entry : dungeonMap.entrySet()){
+            Coord coord = entry.getKey();
+            
+            setTile(coord, tileType);
+            
+        }
     }
     
     public Texture getTileTexture(MapTile tile){
@@ -529,21 +559,30 @@ public class DungeonGen{
             case DIRT:
                 text = tile_dirt;
                 break;
+            case CEILING:
+                text = tile_ceiling;
+                break;
             case WALL:
                 text = tile_wall;
+                break;
+            case WALLTALL:
+                text = tile_walltall;
+                break;
+            case SOLIDWALL:
+                text = tile_solidwall;
                 break;
             case DOOR:
                 text = tile_door;
                 break;
             case DEBUG:
-                text = tile_debug2;
+                text = tile_debug;
                 break;
             case DEBUG2:
-                text = tile_debug;
+                text = tile_debugtall;
                 break;
             default:
                 text = tile_empty;
-                System.out.println("NULL TILE");
+                //System.out.println("NULL TILE");
                 break;
         }
         return text;

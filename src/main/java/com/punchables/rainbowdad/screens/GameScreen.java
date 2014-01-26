@@ -79,9 +79,11 @@ public class GameScreen implements Screen, InputProcessor {
     private boolean angleException = false;
     private double attackPrecision = PI / 10;
     
-    private int tileSize = 64; //pixels
+    public static int tileSize = 64; //pixels
     
     DungeonGen dungeonGen;
+    private int dungeonWidth = 300;
+    private int dungeonHeight = 300;
    
 
     public GameScreen(final RainbowDad gam){
@@ -97,11 +99,7 @@ public class GameScreen implements Screen, InputProcessor {
         artLoader.load();
         Gdx.input.setInputProcessor(this);
         
-        
-        
-        //TiledMapRenderer mapRenderer = new OrthogonalTiledMapRenderer(new TiledMap(), 16);
-        
-        dungeonGen = new DungeonGen(300, 300);
+        dungeonGen = new DungeonGen(dungeonHeight, dungeonWidth);
         
     }
 
@@ -167,47 +165,34 @@ public class GameScreen implements Screen, InputProcessor {
         //game.batch.draw(artLoader.getAssetByID(2), 0, 0);
         //drawing tiles
         ConcurrentHashMap<Coord, MapTile> dungeonMap = dungeonGen.getMap();
-        for(Entry<Coord, MapTile> entry : dungeonMap.entrySet()){
-            Coord coord = entry.getKey();
-            MapTile tile = entry.getValue();
+//        for(Entry<Coord, MapTile> entry : dungeonMap.entrySet()){
+//            Coord coord = entry.getKey();
+//            MapTile tile = entry.getValue();
             
-            if((inCameraFrustum(coord.getX() * tileSize, coord.getY() * tileSize, 100))){
-                
-                game.batch.draw(dungeonGen.getTileTexture(tile),
-                        coord.getX() * tileSize, coord.getY() * tileSize);
-                //collision detection
-                /*
-                essentially, if player is moving, check the if the tile ahead
-                is solid; if it is, stop the player from moving in that direction
-                */
-                
-                
-//                if(Collider.checkCollision(player, tile, tileSize, true)[2] == 1){
-//                    player.setTexture("left64.png");
-//                    //System.out.println("collides " + (int) (System.currentTimeMillis() / 1000));
-//                } else {
-//                    player.setTexture("circledude64.png");
-//                    //System.out.println("not collides");
-//                }
-                
-                ArrayList<MapTile> collisionTiles = new ArrayList<>();
-                
-                if(true || player.getVel().x > 0 || player.getVel().y > 0){
+        if(!dungeonMap.isEmpty()){
+            for(int x = dungeonWidth - 1, i = 0; x >= 0; x--){
+                for(int y = dungeonHeight - 1; y >= 0; y--){
+                    MapTile tile = dungeonMap.get(new Coord(x, y));
                     
+//                    if(tile.get().isOverlay()){
+//                        continue;
+//                    }
                     
-                    
-                    if(Collider.checkCollision(player, tile, tileSize, true)[2] == 1){
-                        collisionTiles.add(tile);
+                    if((inCameraFrustum(tile.getPos().getX() * tileSize, 
+                                tile.getPos().getY() * tileSize, 100))){
+                        
+                        game.batch.draw(dungeonGen.getTileTexture(tile),
+                                tile.getPos().getX() * tileSize, tile.getPos().getY() * tileSize);
+
                     }
-                    
-                    Collider.handleTileCollision(player, collisionTiles, tileSize);
                 }
                 
             }
-            
         }
         
         game.batch.draw(player.getTexture(), player.getPos().x, player.getPos().y);
+        
+        
         
         //background
         
@@ -215,6 +200,8 @@ public class GameScreen implements Screen, InputProcessor {
         for(Enemy ene : enemyFac.getEnemyList()){
             game.batch.draw(artLoader.getAssetByID(1), ene.getPos().x, ene.getPos().y);
         }
+
+        
         game.batch.end();
         
         //shaper.setProjectionMatrix(camera.combined);
@@ -222,7 +209,7 @@ public class GameScreen implements Screen, InputProcessor {
     }
     
     public void render(float delta){
-        //fpsLogger.log();
+        fpsLogger.log();
         
         handleInput();
         
@@ -287,10 +274,10 @@ public class GameScreen implements Screen, InputProcessor {
             player.move(0, -1);
         }
         if(Gdx.input.isKeyPressed(Input.Keys.LEFT_BRACKET)){
-            camera.zoom += .05;
+            camera.zoom += .1;
         }
         if(Gdx.input.isKeyPressed(Input.Keys.RIGHT_BRACKET)){
-            camera.zoom -= .05;
+            camera.zoom -= .1;
         }
     }
     

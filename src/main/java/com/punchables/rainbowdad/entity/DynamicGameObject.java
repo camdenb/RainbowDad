@@ -5,12 +5,16 @@
  */
 package com.punchables.rainbowdad.entity;
 
+import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Vector2;
 import com.punchables.rainbowdad.map.MapTile;
+import com.punchables.rainbowdad.screens.GameScreen;
+import com.punchables.rainbowdad.utils.Collider;
 import com.punchables.rainbowdad.utils.Coord;
 import static java.lang.Math.abs;
 import static java.lang.Math.sqrt;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -25,6 +29,7 @@ public abstract class DynamicGameObject extends GameObject{
     private float maxVel;
     private float friction;
     private float terrainMod;
+    private float collisionOffset = .1f;
     private ConcurrentHashMap<Coord, MapTile> map = new ConcurrentHashMap<>();
 
     public DynamicGameObject(float x, float y, float width, float height){
@@ -42,10 +47,10 @@ public abstract class DynamicGameObject extends GameObject{
         //getAccel().y += -6000;
         //System.out.println(getVel());
         getVel().x += getAccel().x * delta;
-        getPos().x += getVel().x * delta;
+        getPos().x = resolveCollision_x(delta);
         
         getVel().y += getAccel().y * delta;
-        getPos().y += getVel().y * delta;
+        getPos().y = resolveCollision_y(delta);
         
 
         //if(abs(getAccel().x) == 0 && abs(getAccel().y) == 0){
@@ -78,18 +83,39 @@ public abstract class DynamicGameObject extends GameObject{
 
     /*RESOLVE COLLISIONS IN THIS CLASS*/
 
-    public boolean resolveCollision_x(){
+    public float resolveCollision_x(float delta){
+        
+        float oldX = getPos().x;
+        float newX = getPos().x + getVel().x * delta;
 
-//        MapTile tile_west, tile_east;
-//        
-//
-//        if(){
-//            return true;
-//        } else {
-//            return false;
-//        }
+        for(Map.Entry<Coord, MapTile> entry : map.entrySet()){
+            Coord coord = entry.getKey();
+            MapTile tile = entry.getValue();
+            float[] collisionValues = Collider.checkCollision(new Circle(newX, getHitbox().y, getHitbox().radius), tile, GameScreen.tileSize, true);
+            if(abs(collisionValues[0]) > 0 && collisionValues[2] == 1){
+                //oldX += getHitbox().radius - collisionValues[0];// * (collisionValues[0] / abs(collisionValues[0]));
+                return oldX;
+            }
+        }
+        return newX;
+    }
+    
+    public float resolveCollision_y(float delta){
+        
+        float oldY = getPos().y;
+        float newY = getPos().y + getVel().y * delta;
 
-        return true;
+        for(Map.Entry<Coord, MapTile> entry : map.entrySet()){
+            Coord coord = entry.getKey();
+            MapTile tile = entry.getValue();
+            float[] collisionValues = Collider.checkCollision(new Circle(getHitbox().x, newY, getHitbox().radius), tile, GameScreen.tileSize, true);
+            if(abs(collisionValues[1]) > 0 && collisionValues[2] == 1){
+                //int dir = (int) (collisionValues[1] / abs(collisionValues[1]));
+                //oldY = oldY + (getHitbox().radius - collisionValues[1] * dir) * dir;
+                return oldY;
+            }
+        }
+        return newY;
     }
     
     public void move(float x, float y){       

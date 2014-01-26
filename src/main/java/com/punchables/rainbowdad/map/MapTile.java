@@ -24,6 +24,7 @@ public class MapTile{
     
     public MapTile(TileType type){
         this.type = type;
+        this.pos = new Coord();
     }
     
     public MapTile(TileType type, Coord pos){

@@ -13,13 +13,20 @@ package com.punchables.rainbowdad.map;
 public enum TileType {
     NONE(true),
     DEBUG(true),
-    DEBUG2(false),
+    DEBUG2(true),
     DIRT(false),
     FLOOR(false),
     DOOR(false),
+    SOLIDWALL(true),
+    WALLTALL(true),
+    CEILING(true),
     WALL(true);
     
     private final boolean solid;
+    
+    private TileType(boolean solid, boolean overlay){
+        this.solid = solid;
+    }
     
     private TileType(boolean solid){
         this.solid = solid;
@@ -28,6 +35,5 @@ public enum TileType {
     public boolean isSolid() {
         return solid;
     }
-
     
 }

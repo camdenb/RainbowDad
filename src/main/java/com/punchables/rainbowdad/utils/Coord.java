@@ -151,4 +151,8 @@ public class Coord {
     }
 
     
+    public static double getDistanceSquared(Coord c1, Coord c2){
+        return Math.pow(c1.x - c2.x, 2) + Math.pow(c1.y - c2.y, 2);
+    }
+    
 }

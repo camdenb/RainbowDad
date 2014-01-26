@@ -51,7 +51,7 @@ public class Collider {
         
         for(MapTile tile : collidingTiles){
             
-            float[] collisionValues = checkCollision(object, tile, tileSize, true);
+            float[] collisionValues = checkCollision(object.getHitbox(), tile, tileSize, true);
             
             //System.out.println(collisionValues[0]);
             
@@ -144,10 +144,10 @@ public class Collider {
      * @param checkForSolid
      * @return
      * array containing results of collision check:
-     * 0 is diff_x, 1 is diff_y, 2 is boolean collides
+     * 0 is if x collides, 1 is if y collides, 2 is if both collide
      * 
      */
-    public static float[] checkCollision(DynamicGameObject circle, MapTile tile,
+    public static float[] checkCollision(Circle circle, MapTile tile,
             int tileSize, boolean checkForSolid){
 
         //collision values: 0 is diff_x, 1 is diff_y, 2 is boolean collides
@@ -161,8 +161,8 @@ public class Collider {
         boolean collidesX = false;
         boolean collidesY = false;
         
-        float circleRadius = circle.getHitbox().radius;
-        Vector2 circleCenter = new Vector2(circle.getPos().x + circleRadius, circle.getPos().y + circleRadius);
+        float circleRadius = circle.radius;
+        Vector2 circleCenter = new Vector2(circle.x + circleRadius, circle.y + circleRadius);
         
         float tileNorth = tile.getPos().getY() * tileSize + tileSize;
         float tileSouth = tile.getPos().getY() * tileSize;
@@ -191,14 +191,14 @@ public class Collider {
         //System.out.println(distanceX);
         
         //DEBUGGING
-        GameScreen.debugDraw.clearDrawings();
-        GameScreen.debugDraw.addCircle(circleCenter.x, circleCenter.y, 2);
-        GameScreen.debugDraw.addCircle(closestX, closestY, 2);
-        GameScreen.debugDraw.addLine(circleCenter, new Vector2(closestX, closestY));
+//        GameScreen.debugDraw.clearDrawings();
+//        GameScreen.debugDraw.addCircle(circleCenter.x, circleCenter.y, 2);
+//        GameScreen.debugDraw.addCircle(closestX, closestY, 2);
+//        GameScreen.debugDraw.addLine(circleCenter, new Vector2(closestX, closestY));
         
         
         if(collides){
-            tile.set(TileType.DEBUG);
+            //tile.set(TileType.DEBUG);
             collisionValues[2] = 1;
             //tile.set(TileType.DEBUG2);
             
