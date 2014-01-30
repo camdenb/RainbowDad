@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.punchables.rainbowdad.utils.Coord;
 import org.lwjgl.util.vector.Vector2f;
 
 /*
@@ -51,6 +52,11 @@ public abstract class GameObject{
      */
     public void setPos(Vector2 pos){
         this.pos = pos;
+    }
+    
+    public void setPos(Coord pos){
+        this.pos.x = pos.getX();
+        this.pos.y = pos.getY();
     }
 
     /**

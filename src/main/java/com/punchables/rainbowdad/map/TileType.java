@@ -11,7 +11,7 @@ package com.punchables.rainbowdad.map;
  * @author DrShmoogle
  */
 public enum TileType {
-    NONE(true),
+    NONE(false),
     DEBUG(true),
     DEBUG2(true),
     DIRT(false),
@@ -20,6 +20,8 @@ public enum TileType {
     SOLIDWALL(true),
     WALLTALL(true),
     CEILING(true),
+    ENTRANCE(false),
+    EXIT(false),
     WALL(true);
     
     private final boolean solid;

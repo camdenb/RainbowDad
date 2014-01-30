@@ -35,7 +35,7 @@ public class DebugDrawer extends ShapeRenderer{
             circle(circle.x, circle.y, circle.radius);
         }
         
-        circle(1000, 1000, 100);
+        //circle(1000, 1000, 100);
         
         this.end();
         

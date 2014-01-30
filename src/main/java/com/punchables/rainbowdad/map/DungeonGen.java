@@ -14,6 +14,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.punchables.rainbowdad.utils.Coord;
 import com.punchables.rainbowdad.utils.Direction;
 import com.punchables.rainbowdad.utils.SeededRandom;
+import com.punchables.rainbowdad.utils.Utils;
 import static java.lang.Math.abs;
 import java.util.ArrayList;
 import java.util.Map.Entry;
@@ -42,17 +43,19 @@ public class DungeonGen{
     Texture tile_solidwall = new Texture(Gdx.files.internal("64/wall-tall2.png"));
     Texture tile_door = new Texture(Gdx.files.internal("16/door16.png"));
     Texture tile_ceiling = new Texture(Gdx.files.internal("64/ceiling64.png"));
+    Texture tile_exit = new Texture(Gdx.files.internal("64/exit64.png"));
+    Texture tile_entrance = new Texture(Gdx.files.internal("64/entrance64.png"));
     
     private int totalDungeons = 0;
     //number of tries to generate a dungeon
     private int newDungeons = 0;
     private int maxDungeonTries = 3;
     
-    private int maxRooms = 20;
-    private int minRoomSize = 10;
-    private int maxRoomSize = 20;
-    private int meanRoomSize = 15;
-    private int stdRoomDev = 5;
+    private int maxRooms = 60;
+    private int minRoomSize = 5;
+    private int maxRoomSize = 50;
+    private int meanRoomSize = 25;
+    private int stdRoomDev = 10;
     
     //max difference between height and length
     private int roomOblongness = 10;
@@ -82,7 +85,7 @@ public class DungeonGen{
         rand = new SeededRandom(seed);     
     }
     
-    public void generateDungeon(){
+    public Coord generateDungeon(){
         
         //*******
         //Step 0: clear remnants of last dungeon
@@ -280,18 +283,19 @@ public class DungeonGen{
             clearDoors(c, getWallDir(c));
         }
         for(Coord c : wallsList){
-            if(dungeonMap.get(c.getSouth(1)).is(TileType.FLOOR)){
-                setTile(c.getSouth(1), TileType.WALL);
+            if(dungeonMap.get(c.getSouth(1)) != null){
+                if(dungeonMap.get(c.getSouth(1)).is(TileType.FLOOR)){
+                    setTile(c.getSouth(1), TileType.WALL);
+                }
             }
         }
-        
         
         newDungeons = 0;
         
         long now = System.currentTimeMillis();
         Gdx.app.log("DungeonGen", "Time to generate dungeon: " + (now - startTime) + "ms");
         
-        
+        return placeEntrance(5);
         
     }
     
@@ -519,6 +523,14 @@ public class DungeonGen{
         return false;
     }
     
+    public Coord placeEntrance(int distance){
+        distance = (int) Utils.clampMax(distance, roomList.size() - 1);
+        Room room = roomList.get(rand.randomi(roomList.size() - abs(distance), roomList.size() - 1));
+        setTile(room.getCenter(), TileType.ENTRANCE);
+        return room.getCenter();
+    }
+    
+    
     public ConcurrentHashMap getMap(){
         return dungeonMap;
     }
@@ -556,6 +568,12 @@ public class DungeonGen{
                 break;
             case DOOR:
                 text = tile_door;
+                break;
+            case ENTRANCE:
+                text = tile_entrance;
+                break;
+            case EXIT:
+                text = tile_exit;
                 break;
             case DEBUG:
                 text = tile_debug;

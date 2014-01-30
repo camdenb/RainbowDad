@@ -5,13 +5,16 @@
  */
 package com.punchables.rainbowdad.entity;
 
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Vector2;
 import com.punchables.rainbowdad.map.MapTile;
+import com.punchables.rainbowdad.map.TileType;
 import com.punchables.rainbowdad.screens.GameScreen;
 import com.punchables.rainbowdad.utils.Collider;
 import com.punchables.rainbowdad.utils.Coord;
 import static java.lang.Math.abs;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -27,13 +30,36 @@ public abstract class DynamicGameObject extends GameObject{
     private float maxVel;
     private float friction;
     private float terrainMod;
+    private boolean colliding = true;
+    private boolean isMapNull = true;
+    private ArrayList<MapTile> collidableTiles = new ArrayList<>();
     private float collisionOffset = .1f;
+    
+    private float lastGoodXPos = 0;
+    private float lastGoodYPos = 0;
+    
     private ConcurrentHashMap<Coord, MapTile> map = new ConcurrentHashMap<>();
 
     public DynamicGameObject(float x, float y, float width, float height){
         super(x, y, width, height);
         this.vel = new Vector2();
         this.accel = new Vector2();
+    }
+    
+    public void updateAll(float delta, ConcurrentHashMap<Coord, MapTile> map){
+        updateTileMap(map);
+        updateMovement(delta);
+        updateFields(delta);
+        if(!isMapNull){
+            if(isColliding()){
+                refreshCollidableTiles();
+            } else {
+                if(!collidableTiles.isEmpty()){
+                    collidableTiles.clear();
+                }
+            }
+        }
+        ensureNoCollisions();
     }
 
     public void updateMovement(float delta){
@@ -77,43 +103,83 @@ public abstract class DynamicGameObject extends GameObject{
     
     public void updateTileMap(ConcurrentHashMap<Coord, MapTile> map){
         this.map = map;
+        if(map != null){
+            isMapNull = false;
+        }
     }
 
-    /*RESOLVE COLLISIONS IN THIS CLASS*/
+    public void refreshCollidableTiles(){
+        
+        collidableTiles.clear();
+        
+        //96 is a good value
+        int offset = 96;
+        
+        Coord initPos = new Coord((int) getPos().x - offset, 
+                (int) getPos().y - offset).div(GameScreen.tileSize);
+        Coord endPos = new Coord((int) getPos().x + 2 * offset, 
+                (int) getPos().y + 2 * offset).div(GameScreen.tileSize);
+        
+        for(int x = initPos.getX(); x < endPos.getX(); x += 1){
+            for(int y = initPos.getY(); y < endPos.getY(); y += 1){
+                if(!isMapNull && x > 0 && y > 0){
+                    collidableTiles.add(map.get(new Coord(x, y)));
+                    //map.get(new Coord(x, y)).set(TileType.NONE);
+                }
+            }
+        }
+    }
 
     public float resolveCollision_x(float delta){
         
         float oldX = getPos().x;
         float newX = getPos().x + getVel().x * delta;
 
-        for(Map.Entry<Coord, MapTile> entry : map.entrySet()){
-            Coord coord = entry.getKey();
-            MapTile tile = entry.getValue();
-            float[] collisionValues = Collider.checkCollision(new Circle(newX, getHitbox().y, getHitbox().radius), tile, GameScreen.tileSize, true);
-            if(abs(collisionValues[0]) > 0 && collisionValues[2] == 1){
-                //oldX += getHitbox().radius - collisionValues[0];// * (collisionValues[0] / abs(collisionValues[0]));
-                return oldX;
+        if(!isMapNull){
+            for(MapTile tile : collidableTiles){
+                float[] collisionValues = Collider.checkCollision(new Circle(newX, getHitbox().y, getHitbox().radius), tile, GameScreen.tileSize, true);
+                //GameScreen.debugDraw.addCircle(tile.getPos().getX() * GameScreen.tileSize, tile.getPos().getY() * GameScreen.tileSize, 32);
+                if(abs(collisionValues[0]) > 0 && collisionValues[2] == 1){
+                    //oldX += getHitbox().radius - collisionValues[0];// * (collisionValues[0] / abs(collisionValues[0]));
+                    lastGoodXPos = oldX;
+                    return oldX;
+                }
             }
         }
         return newX;
     }
     
     public float resolveCollision_y(float delta){
-        
+
         float oldY = getPos().y;
         float newY = getPos().y + getVel().y * delta;
-
-        for(Map.Entry<Coord, MapTile> entry : map.entrySet()){
-            Coord coord = entry.getKey();
-            MapTile tile = entry.getValue();
-            float[] collisionValues = Collider.checkCollision(new Circle(getHitbox().x, newY, getHitbox().radius), tile, GameScreen.tileSize, true);
-            if(abs(collisionValues[1]) > 0 && collisionValues[2] == 1){
+        if(!isMapNull){
+            for(MapTile tile : collidableTiles){
+                float[] collisionValues = Collider.checkCollision(new Circle(getHitbox().x, newY, getHitbox().radius), tile, GameScreen.tileSize, true);
+                if(abs(collisionValues[1]) > 0 && collisionValues[2] == 1){
                 //int dir = (int) (collisionValues[1] / abs(collisionValues[1]));
-                //oldY = oldY + (getHitbox().radius - collisionValues[1] * dir) * dir;
-                return oldY;
+                    //oldY = oldY + (getHitbox().radius - collisionValues[1] * dir) * dir;
+                    lastGoodYPos = oldY;
+                    return oldY;
+                }
             }
         }
         return newY;
+    }
+
+    public void ensureNoCollisions(){
+        if(!isMapNull){
+            for(MapTile tile : collidableTiles){
+                float[] collisionValues = Collider.checkCollision(new Circle(getHitbox().x, getHitbox().y, getHitbox().radius), tile, GameScreen.tileSize, true);
+                if(collisionValues[2] == 1){
+                    if(collisionValues[0] >= collisionValues[1]){
+                        getPos().x = lastGoodXPos;
+                    } else if(collisionValues[1] > collisionValues[0]){
+                        getPos().y = lastGoodYPos;
+                    }
+                }
+            }
+        }
     }
     
     public void move(float x, float y){       
@@ -202,6 +268,20 @@ public abstract class DynamicGameObject extends GameObject{
      */
     public void setTerrainMod(float terrainMod){
         this.terrainMod = terrainMod;
+    }
+
+    /**
+     * @return the colliding
+     */
+    public boolean isColliding(){
+        return colliding;
+    }
+
+    /**
+     * @param colliding the colliding to set
+     */
+    public void setColliding(boolean colliding){
+        this.colliding = colliding;
     }
 
 }

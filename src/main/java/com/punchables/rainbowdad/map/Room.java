@@ -28,7 +28,7 @@ public class Room {
     }
     
     public void recalcCenter(){
-        this.getCenter().set((getPos().getX() + getWidth()) / 2, (getPos().getY() + getHeight()) / 2);
+        this.getCenter().set(getPos().getX() + (getWidth() / 2), (getPos().getY() + (getHeight()/ 2)));
     }
     
     /**

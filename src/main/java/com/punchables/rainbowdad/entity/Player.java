@@ -32,9 +32,7 @@ public class Player extends DynamicGameObject {
     }
 
     public void update(float delta, ConcurrentHashMap<Coord, MapTile> map){
-        updateTileMap(map);
-        updateMovement(delta);
-        updateFields(delta);
+        updateAll(delta, map);
     }
 
     public void setAttacking(boolean bool){

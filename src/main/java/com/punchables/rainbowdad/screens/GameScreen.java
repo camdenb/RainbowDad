@@ -82,6 +82,7 @@ public class GameScreen implements Screen, InputProcessor {
     public static int tileSize = 64; //pixels
     
     DungeonGen dungeonGen;
+    private Coord playerSpawn = new Coord();
     private int dungeonWidth = 300;
     private int dungeonHeight = 300;
    
@@ -91,7 +92,7 @@ public class GameScreen implements Screen, InputProcessor {
         this.game = gam;
         camera = new OrthographicCamera();
         //ZOOM
-        camera.zoom = 4;
+        camera.zoom = 1.5f;
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         player.setPos(new Vector2(100, 100).scl(tileSize));
         //sprite = new Sprite(sprite.getTexture());
@@ -100,6 +101,8 @@ public class GameScreen implements Screen, InputProcessor {
         Gdx.input.setInputProcessor(this);
         
         dungeonGen = new DungeonGen(dungeonHeight, dungeonWidth);
+        playerSpawn = dungeonGen.generateDungeon();
+        player.setPos(playerSpawn.scale(tileSize));
         
     }
 
@@ -284,8 +287,7 @@ public class GameScreen implements Screen, InputProcessor {
     @Override
     public boolean keyDown(int keycode){
         if(keycode == Keys.C){
-            Gdx.app.log("Player Collision", "" + playerCol);
-            //Gdx.app.log("Player Position", "" + player.getPos());
+            player.setColliding(!player.isColliding());
         }
         if(keycode == Keys.ESCAPE){
             Gdx.app.exit();
@@ -299,7 +301,8 @@ public class GameScreen implements Screen, InputProcessor {
             //System.out.println("ASdasd");
         }
         if(keycode == Keys.G){
-            dungeonGen.generateDungeon();
+            playerSpawn = dungeonGen.generateDungeon();
+            player.setPos(playerSpawn.scale(tileSize));
             //dungeonGen.printDungeon();
             //mapRenderer = new OrthogonalTiledMapRenderer(map, 4f);
             //mapRender = true;

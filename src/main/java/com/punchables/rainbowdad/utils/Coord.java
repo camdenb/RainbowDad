@@ -152,6 +152,14 @@ public class Coord {
         return new Coord(x / tileSize, y / tileSize);
     }
     
+    public Coord scale(int scalar){
+        return new Coord(x * scalar, y * scalar);
+    }
+    
+    public Coord div(int divisor){
+        return new Coord(x / divisor, y / divisor);
+    }
+    
     public String toString() {
         return "[x=" + x + ",y=" + y + "]";
     }
