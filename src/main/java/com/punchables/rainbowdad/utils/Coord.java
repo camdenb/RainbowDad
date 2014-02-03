@@ -15,8 +15,8 @@ import java.awt.Point;
  */
 public class Coord {
 
-    private int x;
-    private int y;
+    public int x;
+    public int y;
 
     public Coord(){
         this(0, 0);
@@ -27,6 +27,11 @@ public class Coord {
         this.y = y;
     }
 
+    public Coord(float x, float y){
+        this.x = (int) x;
+        this.y = (int) y;
+    }
+    
     public Coord(Vector2 v){
         this.x = (int) v.x;
         this.y = (int) v.y;
@@ -159,6 +164,11 @@ public class Coord {
     public Coord div(int divisor){
         return new Coord(x / divisor, y / divisor);
     }
+    
+    public Coord add(Vector2 vect){
+        return new Coord(x + vect.x, y + vect.y);
+    }
+    
     
     public String toString() {
         return "[x=" + x + ",y=" + y + "]";

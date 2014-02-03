@@ -198,94 +198,13 @@ public class Collider {
         
         
         if(collides){
-            //tile.set(TileType.DEBUG);
             collisionValues[2] = 1;
-            //tile.set(TileType.DEBUG2);
-            
         } else {
             collisionValues[2] = 0;
         }
         
         collisionValues[0] = distanceX;
         collisionValues[1] = distanceY;
-        
-        return collisionValues;
-    }
-    
-    /**
-     * Checks for collision between circle and a tile.
-     *
-     * @param object
-     * @param tile
-     * @param tileSize
-     * @param checkForSolid
-     * @return
-     * array containing results of collision check:
-     * 0 is diff_x, 1 is diff_y, 2 is boolean collides
-     * 
-     */
-    public static float[] OLDcheckCollision(DynamicGameObject object, MapTile tile,
-            int tileSize, boolean checkForSolid){
-
-        //collision values: 0 is diff_x, 1 is diff_y, 2 is boolean collides
-        float[] collisionValues = {0, 0, 0};
-        
-        if(checkForSolid && !tile.get().isSolid()){
-            collisionValues[2] = 0;
-            return collisionValues;
-        }
-        
-        boolean collidesX = false;
-        boolean collidesY = false;
-        
-        float objRadius = object.getHitbox().radius;
-        Vector2 objCenter = new Vector2(object.getPos().x + objRadius, object.getPos().y + objRadius);
-        
-        float objNorth = objCenter.y + objRadius;
-        float objSouth = objCenter.y - objRadius;
-        float objWest = objCenter.x - objRadius;
-        float objEast = objCenter.x + objRadius;
-        
-        float tileNorth = tile.getPos().getY() * tileSize + tileSize;
-        float tileSouth = tile.getPos().getY() * tileSize;
-        float tileWest = tile.getPos().getX() * tileSize;
-        float tileEast = tile.getPos().getX() * tileSize + tileSize;
-        
-        //length of collision vector
-        float diff_x = 0;
-        float diff_y = 0;
-       
-        if((objEast >= tileWest) && (objEast <= tileEast)){
-            diff_x = objEast - tileWest;
-            collidesX = true;
-        }
-        if((objWest <= tileEast) && (objWest >= tileWest)){
-            diff_x = objWest - tileEast;
-            collidesX = true;
-        }
-        if((objNorth >= tileSouth) && (objNorth <= tileNorth)){
-            diff_y = objNorth - tileSouth;
-            collidesY = true;
-        }
-        if((objSouth <= tileNorth) && (objSouth >= tileSouth)){
-            diff_y = objSouth - tileNorth;
-            collidesY = true;
-        }
-
-        if(collidesX && collidesY){
-            //System.out.println(tile.get());
-        }
-        
-        if(collidesX && collidesY){
-            collisionValues[2] = 1;
-            tile.set(TileType.DEBUG);
-            
-        } else {
-            collisionValues[2] = 0;
-        }
-        
-        collisionValues[0] = diff_x;
-        collisionValues[1] = diff_y;
         
         return collisionValues;
     }

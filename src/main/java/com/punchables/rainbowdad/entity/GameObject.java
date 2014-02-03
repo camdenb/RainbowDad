@@ -46,6 +46,10 @@ public abstract class GameObject{
     public Vector2 getPos(){
         return pos;
     }
+    
+    public Coord getPosCoord(){
+        return new Coord(pos.x, pos.y);
+    }
 
     /**
      * @param pos the pos to set

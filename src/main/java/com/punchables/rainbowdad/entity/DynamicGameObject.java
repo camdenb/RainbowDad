@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Vector2;
 import com.punchables.rainbowdad.map.MapTile;
+import com.punchables.rainbowdad.map.Room;
 import com.punchables.rainbowdad.map.TileType;
 import com.punchables.rainbowdad.screens.GameScreen;
 import com.punchables.rainbowdad.utils.Collider;
@@ -30,6 +31,7 @@ public abstract class DynamicGameObject extends GameObject{
     private float maxVel;
     private float friction;
     private float terrainMod;
+    private Room currentRoom = new Room(100, 100, new Coord(100, 100));
     private boolean colliding = true;
     private boolean isMapNull = true;
     private ArrayList<MapTile> collidableTiles = new ArrayList<>();
@@ -52,14 +54,14 @@ public abstract class DynamicGameObject extends GameObject{
         updateFields(delta);
         if(!isMapNull){
             if(isColliding()){
-                refreshCollidableTiles();
+                refreshCollidableTiles(96);
             } else {
                 if(!collidableTiles.isEmpty()){
                     collidableTiles.clear();
                 }
             }
         }
-        ensureNoCollisions();
+        //ensureNoCollisions();
     }
 
     public void updateMovement(float delta){
@@ -108,12 +110,9 @@ public abstract class DynamicGameObject extends GameObject{
         }
     }
 
-    public void refreshCollidableTiles(){
+    public ArrayList refreshCollidableTiles(int offset){
         
         collidableTiles.clear();
-        
-        //96 is a good value
-        int offset = 96;
         
         Coord initPos = new Coord((int) getPos().x - offset, 
                 (int) getPos().y - offset).div(GameScreen.tileSize);
@@ -123,11 +122,18 @@ public abstract class DynamicGameObject extends GameObject{
         for(int x = initPos.getX(); x < endPos.getX(); x += 1){
             for(int y = initPos.getY(); y < endPos.getY(); y += 1){
                 if(!isMapNull && x > 0 && y > 0){
-                    collidableTiles.add(map.get(new Coord(x, y)));
+                    collidableTiles.add(getMap().get(new Coord(x, y)));
                     //map.get(new Coord(x, y)).set(TileType.NONE);
                 }
             }
         }
+        
+        return collidableTiles;
+        
+    }
+    
+    public ArrayList getCollidableTiles(int offset){       
+        return refreshCollidableTiles(offset);
     }
 
     public float resolveCollision_x(float delta){
@@ -282,6 +288,27 @@ public abstract class DynamicGameObject extends GameObject{
      */
     public void setColliding(boolean colliding){
         this.colliding = colliding;
+    }
+
+    /**
+     * @return the map
+     */
+    public ConcurrentHashMap<Coord, MapTile> getMap(){
+        return map;
+    }
+
+    /**
+     * @return the currentRoom
+     */
+    public Room getCurrentRoom(){
+        return currentRoom;
+    }
+
+    /**
+     * @param currentRoom the currentRoom to set
+     */
+    public void setCurrentRoom(Room currentRoom){
+        this.currentRoom = currentRoom;
     }
 
 }

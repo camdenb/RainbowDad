@@ -3,33 +3,42 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.punchables.rainbowdad.entity;
 
 import com.punchables.rainbowdad.utils.Utils;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.Array;
+import com.punchables.rainbowdad.entity.enemies.Slime;
 import java.util.ArrayList;
 
 /**
  *
  * @author DrShmoogle
  */
-public class EnemyFactory{
+public class EnemyFactory {
 
     private Array<Enemy> enemyList = new Array<>();
-    
+
     public EnemyFactory(){
     }
 
-    public void spawnEnemy(float x, float y){
+    public void spawnEnemy(float x, float y, EnemyType enemyType){
         //Enemy enemy = new Enemy(x, y, 128, 128);
-        
-        Enemy enemy = new Enemy(Utils.randomi(100, 800), Utils.randomi(100, 600), 64, 64);
-        enemy.setTexture("enemy128.png");
+
+        Enemy enemy = new Enemy();
+        switch(enemyType){
+            case SLIME:
+                enemy = new Slime(x, y, 64, 64);
+                break;
+        }
+
+        String texture = enemyType.getTextureString();
+
+        enemy.setTexture(texture);
         getEnemyList().add(enemy);
     }
 
+    
     /**
      * @return the enemyList
      */
@@ -43,5 +52,7 @@ public class EnemyFactory{
     public void setEnemyList(Array<Enemy> enemyList){
         this.enemyList = enemyList;
     }
+
+    
 
 }

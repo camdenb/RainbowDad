@@ -96,6 +96,11 @@ public class Room {
                 room.width == width);
     }
     
+    public boolean isCoordInRoom(Coord coord){
+        return (coord.x >= pos.x && coord.x <= pos.x + width) &&
+                            (coord.y >= pos.y && coord.y <= pos.y + height);
+    }
+    
     /**
      * @return the height
      */

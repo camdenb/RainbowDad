@@ -6,6 +6,8 @@
 
 package com.punchables.rainbowdad.screens;
 
+import AStar.AStarMain;
+import AStar.Node;
 import com.punchables.rainbowdad.utils.Art;
 import com.punchables.rainbowdad.map.MapTile;
 import com.punchables.rainbowdad.utils.Coord;
@@ -39,7 +41,9 @@ import com.punchables.rainbowdad.entity.Enemy;
 import com.punchables.rainbowdad.entity.EnemyFactory;
 import com.punchables.rainbowdad.entity.Player;
 import com.punchables.rainbowdad.RainbowDad;
+import com.punchables.rainbowdad.entity.EnemyType;
 import com.punchables.rainbowdad.map.DungeonGen;
+import com.punchables.rainbowdad.map.Room;
 import com.punchables.rainbowdad.map.TileType;
 import com.punchables.rainbowdad.utils.Collider;
 import com.punchables.rainbowdad.utils.DebugDrawer;
@@ -123,7 +127,18 @@ public class GameScreen implements Screen, InputProcessor {
         debugDraw.setProjectionMatrix(camera.combined);
         
         for(Enemy ene : enemyFac.getEnemyList()){
-            ene.update(delta);
+            ene.update(delta, dungeonGen.getMap());
+            
+            //refresh current room
+            for(Room room : dungeonGen.getRoomList()){
+                if(room.isCoordInRoom(ene.getPosCoord().div(GameScreen.tileSize))){
+                    ene.setCurrentRoom(room);
+                    //System.out.println("ROOM SET");
+                }
+            }
+            
+            //ene.steerTo(player.getPos(), 64, false);
+            
             double playerAngleToEnemy = Math.atan2(player.getPos().y - ene.getPos().y, player.getPos().x - ene.getPos().x);
             if(playerAngleToEnemy < 0){
                 //convert to actual radians
@@ -201,7 +216,7 @@ public class GameScreen implements Screen, InputProcessor {
         
         //playerRec.draw(game.batch);     
         for(Enemy ene : enemyFac.getEnemyList()){
-            game.batch.draw(artLoader.getAssetByID(1), ene.getPos().x, ene.getPos().y);
+            game.batch.draw(ene.getTexture(), ene.getPos().x, ene.getPos().y);
         }
 
         
@@ -212,7 +227,7 @@ public class GameScreen implements Screen, InputProcessor {
     }
     
     public void render(float delta){
-        fpsLogger.log();
+        //fpsLogger.log();
         
         handleInput();
         
@@ -293,14 +308,22 @@ public class GameScreen implements Screen, InputProcessor {
             Gdx.app.exit();
         }
         if(keycode == Keys.E){
-            enemyFac.spawnEnemy(200, 200);
+            enemyFac.spawnEnemy(player.getPos().x, player.getPos().y, EnemyType.SLIME);
             //System.out.println("ASdasd");
         }
-        if(keycode == Keys.O){
-            player.setPos(new Vector2());
-            //System.out.println("ASdasd");
-        }
+//        if(keycode == Keys.P){
+//            //TESTING A STAR
+//            AStarMain aStar = new AStarMain(dungeonGen.getMap());
+//            ArrayList<Node> path = new ArrayList<>();
+//            System.out.println(player.getPosCoord() + " " +  player.getPosCoord().getSouth(10 * tileSize));
+//            aStar.calcNewPathFromCoord(player.getPosCoord(), player.getPosCoord().getSouth(10 * tileSize));
+//            for(Node node : path){
+//                dungeonGen.setTile(node.getPos().scale(tileSize), TileType.DEBUG);
+//            }
+//            
+//        }
         if(keycode == Keys.G){
+            enemyFac.getEnemyList().clear();
             playerSpawn = dungeonGen.generateDungeon();
             player.setPos(playerSpawn.scale(tileSize));
             //dungeonGen.printDungeon();

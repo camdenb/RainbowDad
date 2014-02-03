@@ -597,5 +597,12 @@ public class DungeonGen{
     public void setTile(Coord coordinate, TileType tileType){
         dungeonMap.put(coordinate, new MapTile(tileType, coordinate));
     }
+
+    /**
+     * @return the roomList
+     */
+    public ArrayList<Room> getRoomList(){
+        return roomList;
+    }
     
 }
